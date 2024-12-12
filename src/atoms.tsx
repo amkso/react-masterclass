@@ -1,32 +1,19 @@
-import { atom, selector } from "recoil";
+import { atom } from "recoil";
 
-export enum Categories {
-  "TO_DO" = "TO_DO",
-  "DOING" = "DOING",
-  "DONE" = "DONE",
-}
-
-export interface IToDo {
-  text: string;
+export interface ITodo {
   id: number;
-  category: Categories;
+  text: string;
 }
 
-export const categoryState = atom<Categories>({
-  key: "category",
-  default: Categories.TO_DO,
-});
+interface IToDoState {
+  [key: string]: ITodo[];
+}
 
-export const toDoState = atom<IToDo[]>({
+export const toDoState = atom<IToDoState>({
   key: "toDo",
-  default: [], // 2. localstorage에서 todo 가져오는것으로 초기화
-});
-
-export const toDoSelector = selector({
-  key: "toDoSelector",
-  get: ({ get }) => {
-    const toDos = get(toDoState);
-    const category = get(categoryState);
-    return toDos.filter((toDo) => toDo.category === category);
+  default: {
+    "To Do": [], // 스페이스는 변수로 안되기에 "To Do"를 씀 아니면, To_Do를 써야함
+    Doing: [],
+    Done: [],
   },
 });
