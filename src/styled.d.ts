@@ -14,5 +14,13 @@ declare module "styled-components" {
       darker: string;
       lighter: string;
     };
+
+    // optional
+    bgColor?: string;
+    textColor?: string;
+    accentColor?: string;
+    cardBgColor?: string;
+    cardColor?: string;
+    boardColor?: string;
   }
 }

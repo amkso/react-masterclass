@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useHistory, useRouteMatch } from "react-router-dom";
 import styled from "styled-components";
+import { netflixBasePath } from "../../Routes/Netflix";
 
 const Nav = styled(motion.nav)`
   display: flex;
@@ -113,8 +114,8 @@ interface IForm {
 
 function Header() {
   const [searchOpen, setSearchOpen] = useState(false);
-  const homeMatch = useRouteMatch("/");
-  const tvMatch = useRouteMatch("/tv");
+  const homeMatch = useRouteMatch(netflixBasePath + "/");
+  const tvMatch = useRouteMatch(netflixBasePath + "/tv");
   const inputAnimation = useAnimation();
   const navAnimation = useAnimation();
   const { scrollY } = useScroll();
@@ -163,12 +164,12 @@ function Header() {
         </Logo>
         <Items>
           <Item>
-            <Link to="/">
+            <Link to={netflixBasePath + "/"}>
               Home {homeMatch?.isExact && <Circle layoutId="circle" />}
             </Link>
           </Item>
           <Item>
-            <Link to="tv">
+            <Link to={netflixBasePath + "/tv"}>
               Tv Shows {tvMatch && <Circle layoutId="circle" />}
             </Link>
           </Item>

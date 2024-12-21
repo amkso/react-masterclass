@@ -1,12 +1,5 @@
 import { atom } from "recoil";
 
-// 1. Crypto-tracker Atoms
-export const isDarkAtom = atom({
-  key: "isDark",
-  default: false,
-});
-
-// 2. Trello Atoms
 export interface ITodo {
   id: number;
   text: string;
