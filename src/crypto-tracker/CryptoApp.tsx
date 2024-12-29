@@ -2,10 +2,10 @@ import { useQuery } from "react-query";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
 import { Helmet } from "react-helmet";
-import { useSetRecoilState } from "recoil";
 import { fetchCoins } from "./crypto-api";
-import { isDarkAtom } from "../atoms";
 import { cryptoBasePath } from "../Routes/Crypto";
+import DarkmodeToggle from "./components/DarkmodeToggle";
+import BackButton from "./components/BackButton";
 
 const Container = styled.div`
   padding: 0px 20px;
@@ -16,11 +16,13 @@ const Container = styled.div`
 const Hedaer = styled.header`
   height: 15vh;
   display: flex;
-  justify-content: center;
+  justify-content: space-evenly;
   align-items: center;
 `;
 
-const CoinsList = styled.ul``;
+const CoinsList = styled.ul`
+  transition: 400ms;
+`;
 
 const Coin = styled.li`
   background-color: ${(props) => props.theme.cardBgColor};
@@ -28,6 +30,7 @@ const Coin = styled.li`
   border-radius: 15px;
   margin-bottom: 10px;
   border: 1px solid white;
+  transition: 400ms;
   a {
     display: flex;
     align-items: center;
@@ -35,9 +38,14 @@ const Coin = styled.li`
     transition: color 0.2s ease-in;
   }
   &:hover {
+    box-shadow: 0px 0px 30px 1px rgba(0, 255, 117, 0.3);
+    transform: scale(1.1, 1.1);
     a {
       color: ${(props) => props.theme.accentColor};
     }
+  }
+  ${CoinsList}:hover > &:not(:hover) {
+    filter: blur(1.5px);
   }
 `;
 
@@ -67,11 +75,7 @@ interface ICoin {
   type: string;
 }
 
-interface ICoinsProps {}
-
-function Coins({}: ICoinsProps) {
-  const setDarkAtom = useSetRecoilState(isDarkAtom);
-  const toggleDarkAtom = () => setDarkAtom((prev) => !prev);
+function CryptoApp() {
   const { isLoading, data } = useQuery<ICoin[]>("allCoins", fetchCoins);
   return (
     <Container>
@@ -79,8 +83,9 @@ function Coins({}: ICoinsProps) {
         <title>코인</title>
       </Helmet>
       <Hedaer>
+        <BackButton />
         <Title>코인</Title>
-        <button onClick={toggleDarkAtom}>Toggle Mode</button>
+        <DarkmodeToggle />
       </Hedaer>
       {isLoading ? (
         <Loader>Loading...</Loader>
@@ -106,4 +111,4 @@ function Coins({}: ICoinsProps) {
     </Container>
   );
 }
-export default Coins;
+export default CryptoApp;

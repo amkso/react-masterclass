@@ -8,7 +8,7 @@ const NetflixGlobalStyle = createGlobalStyle`
   body{
     color: ${(props) => props.theme.white.darker};
     line-height: 1.2;
-    background-color: black;
+    background-color: #141414;
   }
   ::-webkit-scrollbar {
     display: none;

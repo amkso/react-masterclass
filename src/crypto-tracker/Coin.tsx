@@ -13,6 +13,8 @@ import { Link } from "react-router-dom";
 import { useQuery } from "react-query";
 import { fetchCoinInfo, fetchCoinTickers } from "./crypto-api";
 import { cryptoBasePath } from "../Routes/Crypto";
+import BackButton from "./components/BackButton";
+import DarkmodeToggle from "./components/DarkmodeToggle";
 
 const Container = styled.div`
   padding: 0px 20px;
@@ -20,10 +22,10 @@ const Container = styled.div`
   margin: 0 auto;
 `;
 
-const Hedaer = styled.header`
+const Header = styled.header`
   height: 15vh;
   display: flex;
-  justify-content: center;
+  justify-content: space-evenly;
   align-items: center;
 `;
 
@@ -145,9 +147,7 @@ interface PriceData {
   };
 }
 
-interface ICoinsProps {}
-
-function Coin({}: ICoinsProps) {
+function Coin() {
   const { coinId } = useParams<RouteParams>();
   const { state } = useLocation<RouteState>();
   const priceMatch = useRouteMatch(cryptoBasePath + "/:coinId/price");
@@ -171,11 +171,13 @@ function Coin({}: ICoinsProps) {
           {state?.name ? state.name : loading ? "Loading..." : infoData?.name}
         </title>
       </Helmet>
-      <Hedaer>
+      <Header>
+        <BackButton />
         <Title>
           {state?.name ? state.name : loading ? "Loading..." : infoData?.name}
         </Title>
-      </Hedaer>
+        <DarkmodeToggle />
+      </Header>
       {loading ? (
         <Loader>Loading...</Loader>
       ) : (
@@ -217,7 +219,7 @@ function Coin({}: ICoinsProps) {
 
           <Switch>
             <Route path={`${cryptoBasePath}/:coinId/price`}>
-              <Price />
+              <Price coinId={coinId} />
             </Route>
             <Route path={`${cryptoBasePath}/:coinId/chart`}>
               <Chart coinId={coinId} />

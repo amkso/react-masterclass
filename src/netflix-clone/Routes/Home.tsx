@@ -1,14 +1,16 @@
 import { useQuery } from "react-query";
-import { motion, AnimatePresence, Variants, useScroll } from "motion/react";
+import { motion, AnimatePresence, Variants, useScroll } from "framer-motion";
 import { getMovies, IGetMoviesResult } from "../api";
 import styled from "styled-components";
 import { makeImagePath } from "../utils";
 import { useState } from "react";
 import { useHistory, useRouteMatch } from "react-router-dom";
 import { netflixBasePath } from "../../Routes/Netflix";
+import { ButtonPlay, ButtonInfo } from "../Components/Button";
 
 const Wrapper = styled.div`
-  background-color: black;
+  background-color: rgba(20, 20, 20, 1);
+  height: 150vh;
 `;
 
 const Loader = styled.div`
@@ -20,28 +22,52 @@ const Loader = styled.div`
 
 const Banner = styled.div<{ bgPhoto: string }>`
   height: 100vh;
+  position: relative;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 60px;
-  background-image: linear-gradient(rgba(0, 0, 0, 1), rgba(0, 0, 0, 0)),
+  padding: 0 60px;
+  background-image: linear-gradient(
+      rgba(20, 20, 20, 1),
+      rgba(0, 0, 0, 0),
+      rgba(20, 20, 20, 1)
+    ),
     url(${(props) => props.bgPhoto});
   background-size: cover;
 `;
 
-const Title = styled.h2`
-  font-size: 68px;
+const BannerOverlay = styled.div`
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  top: 0;
+  left: 60px;
+  height: 75%;
+  width: 35%;
+  gap: 2%;
+  div {
+    display: flex;
+    gap: 10px;
+  }
+`;
+
+const Title = styled.h1`
+  font-size: 80px;
   margin-bottom: 20px;
+  font-weight: 800;
 `;
 
 const Overview = styled.p`
+  margin-bottom: 20px;
   font-size: 30px;
-  width: 50%;
+  width: 100%;
 `;
 
 const Slider = styled.div`
   position: relative;
   top: -100px;
+  margin: 0 60px;
 `;
 
 const Row = styled(motion.div)`
@@ -57,7 +83,8 @@ const Box = styled(motion.div)<{ bgPhoto: string }>`
   background-image: url(${(props) => props.bgPhoto});
   background-size: cover;
   background-position: center center;
-  height: 200px;
+  border-radius: 5px;
+  height: 150px;
   font-size: 66px;
   cursor: pointer;
   &:first-child {
@@ -163,6 +190,15 @@ const infoVariants: Variants = {
 
 const offset = 6;
 
+const truncateText = (text: string | undefined, wordLimit: number) => {
+  if (!text) return "";
+  const words = text.split(" ");
+  if (words.length > wordLimit) {
+    return words.slice(0, wordLimit).join(" ") + "...";
+  }
+  return text;
+};
+
 function Home() {
   const history = useHistory();
   const bigMovieMatch = useRouteMatch<{ movieId: string }>(
@@ -192,6 +228,8 @@ function Home() {
   const clickedMovie =
     bigMovieMatch?.params.movieId &&
     data?.results.find((movie) => movie.id === +bigMovieMatch.params.movieId);
+
+  const overview = truncateText(data?.results[0].overview, 20);
   return (
     <Wrapper>
       {isLoading ? (
@@ -202,8 +240,14 @@ function Home() {
             onClick={increaseIndex}
             bgPhoto={makeImagePath(data?.results[0].backdrop_path || "")}
           >
-            <Title>{data?.results[0].title}</Title>
-            <Overview>{data?.results[0].overview}</Overview>
+            <BannerOverlay>
+              <Title>{data?.results[0].title}</Title>
+              <Overview>{overview}</Overview>
+              <div>
+                <ButtonPlay onClick={() => null} />
+                <ButtonInfo onClick={() => null} />
+              </div>
+            </BannerOverlay>
           </Banner>
           <Slider>
             <AnimatePresence initial={false} onExitComplete={toggleLeaving}>

@@ -4,7 +4,7 @@ import { useRecoilValue } from "recoil";
 import { isDarkAtom } from "../atoms";
 import { fetchCoinHistory } from "./crypto-api";
 
-interface IHistorical {
+export interface IHistorical {
   time_open: number;
   time_close: number;
   open: string;
@@ -28,7 +28,12 @@ function Chart({ coinId }: ChartProps) {
       refetchInterval: 10000,
     }
   );
-
+  try {
+    data?.at(0);
+  } catch (error) {
+    console.log(error);
+    return <div>error</div>;
+  }
   return (
     <div>
       {isLoading ? (

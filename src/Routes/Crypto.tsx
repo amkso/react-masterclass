@@ -1,6 +1,6 @@
 import { BrowserRouter, Route, Switch } from "react-router-dom";
 import Coin from "../crypto-tracker/Coin";
-import Coins from "../crypto-tracker/Coins";
+import CryptoApp from "../crypto-tracker/CryptoApp";
 import { createGlobalStyle, ThemeProvider } from "styled-components";
 import { useRecoilValue } from "recoil";
 import { isDarkAtom } from "../atoms";
@@ -24,7 +24,7 @@ function Crypto() {
             <Coin />
           </Route>
           <Route path={cryptoBasePath}>
-            <Coins />
+            <CryptoApp />
           </Route>
         </Switch>
       </BrowserRouter>

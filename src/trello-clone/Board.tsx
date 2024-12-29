@@ -1,7 +1,6 @@
 import { Droppable } from "react-beautiful-dnd";
 import DraggableCard from "./DraggableCard";
 import styled from "styled-components";
-import { useRef } from "react";
 import { useForm } from "react-hook-form";
 import { ITodo, toDoState } from "../atoms";
 import { useSetRecoilState } from "recoil";
@@ -24,15 +23,15 @@ const Title = styled.h2`
 `;
 
 interface IAreaProps {
-  isDraggingOver: boolean;
-  isDraggingFromThis: boolean;
+  isdraggingover: string;
+  isdraggingfromthis: string;
 }
 
 const Area = styled.div<IAreaProps>`
   background-color: ${(props) =>
-    props.isDraggingOver
+    props.isdraggingover === "true"
       ? "#dfe6e9"
-      : props.isDraggingFromThis
+      : props.isdraggingfromthis === "true"
       ? "#b2bec3"
       : "transparent"};
   flex-grow: 1;
@@ -86,8 +85,8 @@ function Board({ toDos, boardId }: IBoardProps) {
       <Droppable droppableId={boardId}>
         {(magic, info) => (
           <Area
-            isDraggingOver={info.isDraggingOver}
-            isDraggingFromThis={Boolean(info.draggingFromThisWith)}
+            isdraggingover={info.isDraggingOver.toString()}
+            isdraggingfromthis={info.draggingFromThisWith + ""}
             ref={magic.innerRef}
             {...magic.droppableProps}
           >

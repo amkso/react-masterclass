@@ -11,7 +11,7 @@ const Wrapper = styled.div`
   margin: 0 auto;
   justify-content: center;
   align-items: center;
-  height: 100vh;
+  height: 50vh;
 `;
 
 const Boards = styled.div`
@@ -20,6 +20,18 @@ const Boards = styled.div`
   align-items: flex-start;
   width: 100%;
   gap: 10px;
+`;
+
+const Header = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-size: 24px;
+  height: 30vh;
+  h1 {
+    padding-bottom: 10px;
+  }
 `;
 
 function TrelloApp() {
@@ -62,6 +74,10 @@ function TrelloApp() {
   };
   return (
     <DragDropContext onDragEnd={onDragEnd}>
+      <Header>
+        <h1>Trello Clone</h1>
+        <h2>react-beautiful-dnd is deprecated</h2>
+      </Header>
       <Wrapper>
         <Boards>
           {Object.keys(toDos).map((boardId) => (
