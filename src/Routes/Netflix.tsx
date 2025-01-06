@@ -20,6 +20,9 @@ export const netflixBasePath = `/Netflix`;
 function Netflix() {
   return (
     <ThemeProvider theme={theme}>
+      {/* <Helmet>
+        <link rel="stylesheet" href="" />
+      </Helmet> */}
       <NetflixGlobalStyle />
       <NetflixApp />
     </ThemeProvider>

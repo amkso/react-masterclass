@@ -58,12 +58,12 @@ const ButtonInfo: React.FC<{
         viewBox="0 0 24 24"
         fill="none"
       >
-        <circle cx="12" cy="12" r="10" stroke="#ffffff" stroke-width="1.5" />
+        <circle cx="12" cy="12" r="10" stroke="#ffffff" strokeWidth="1.5" />
         <path
           d="M12 17V11"
           stroke="#ffffff"
-          stroke-width="1.5"
-          stroke-linecap="round"
+          strokeWidth="1.5"
+          strokeLinecap="round"
         />
         <circle
           cx="1"

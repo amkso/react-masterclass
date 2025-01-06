@@ -1,16 +1,15 @@
 import { useQuery } from "react-query";
-import { motion, AnimatePresence, Variants, useScroll } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { getMovies, IGetMoviesResult } from "../api";
 import styled from "styled-components";
-import { makeImagePath } from "../utils";
-import { useState } from "react";
+import { makeImagePath, truncateText } from "../utils";
 import { useHistory, useRouteMatch } from "react-router-dom";
 import { netflixBasePath } from "../../Routes/Netflix";
 import { ButtonPlay, ButtonInfo } from "../Components/Button";
+import Slider from "../Components/Slider";
 
 const Wrapper = styled.div`
   background-color: rgba(20, 20, 20, 1);
-  height: 150vh;
 `;
 
 const Loader = styled.div`
@@ -20,7 +19,7 @@ const Loader = styled.div`
   align-items: center;
 `;
 
-const Banner = styled.div<{ bgPhoto: string }>`
+const Banner = styled.div<{ bgphoto: string }>`
   height: 100vh;
   position: relative;
   display: flex;
@@ -32,7 +31,7 @@ const Banner = styled.div<{ bgPhoto: string }>`
       rgba(0, 0, 0, 0),
       rgba(20, 20, 20, 1)
     ),
-    url(${(props) => props.bgPhoto});
+    url(${(props) => props.bgphoto});
   background-size: cover;
 `;
 
@@ -60,52 +59,9 @@ const Title = styled.h1`
 
 const Overview = styled.p`
   margin-bottom: 20px;
-  font-size: 30px;
+  font-size: 24px;
+  line-height: 1.3;
   width: 100%;
-`;
-
-const Slider = styled.div`
-  position: relative;
-  top: -100px;
-  margin: 0 60px;
-`;
-
-const Row = styled(motion.div)`
-  display: grid;
-  gap: 5px;
-  grid-template-columns: repeat(6, 1fr);
-  position: absolute;
-  width: 100%;
-`;
-
-const Box = styled(motion.div)<{ bgPhoto: string }>`
-  background-color: white;
-  background-image: url(${(props) => props.bgPhoto});
-  background-size: cover;
-  background-position: center center;
-  border-radius: 5px;
-  height: 150px;
-  font-size: 66px;
-  cursor: pointer;
-  &:first-child {
-    transform-origin: center left;
-  }
-  &:last-child {
-    transform-origin: center right;
-  }
-`;
-
-const Info = styled(motion.div)`
-  padding: 10px;
-  background-color: ${(props) => props.theme.black.lighter};
-  opacity: 0;
-  position: absolute;
-  width: 100%;
-  bottom: 0;
-  h4 {
-    text-align: center;
-    font-size: 18px;
-  }
 `;
 
 const Overlay = styled(motion.div)`
@@ -121,16 +77,19 @@ const BigMovie = styled(motion.div)`
   position: absolute;
   width: 40vw;
   height: 80vh;
+  top: 10vh;
   left: 0;
   right: 0;
   margin: 0 auto;
   border-radius: 15px;
   overflow: hidden;
-  background-color: ${(props) => props.theme.black.lighter};
+  background-color: rgba(20, 20, 20, 1);
 `;
 
-const BigCover = styled.div`
+const BigCover = styled.div<{ bgphoto: string }>`
   width: 100%;
+  background-image: linear-gradient(rgba(0, 0, 0, 0), rgba(20, 20, 20, 1)),
+    url(${(props) => props.bgphoto});
   background-size: cover;
   background-position: center center;
   height: 400px;
@@ -138,173 +97,195 @@ const BigCover = styled.div`
 
 const BigTitle = styled.h3`
   color: ${(props) => props.theme.white.lighter};
-  padding: 10px;
+  padding: 20px 40px;
   font-size: 46px;
+  font-weight: 800;
   position: relative;
-  top: -80px;
+`;
+
+const ButtonContainer = styled.div`
+  padding: 10px 40px;
+  display: flex;
+  justify-content: flex-start;
+  button {
+    border: none;
+    width: 60px;
+    height: 60px;
+    border-radius: 30px;
+    margin-right: 4px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    &:last-child {
+      color: white;
+      background-color: rgba(20, 20, 20, 0.3);
+      border: 2px solid rgba(255, 255, 255, 0.5);
+    }
+  }
 `;
 
 const BigOverview = styled.p`
-  padding: 20px;
+  font-size: 20px;
+  line-height: 1.2;
+  padding: 10px 40px;
   color: ${(props) => props.theme.white.lighter};
   top: -80px;
 `;
 
-const rowVariants: Variants = {
-  hidden: {
-    x: window.outerWidth + 5,
-  },
-  visible: {
-    x: 0,
-  },
-  exit: {
-    x: -window.outerWidth - 5,
-  },
-};
-
-const boxVariants: Variants = {
-  normal: {
-    scale: 1,
-  },
-  hover: {
-    scale: 1.3,
-    y: -50,
-    transition: {
-      delay: 0.5,
-      duration: 0.3,
-      type: "tween",
-    },
-  },
-};
-
-const infoVariants: Variants = {
-  hover: {
-    opacity: 1,
-    transition: {
-      delay: 0.5,
-      duration: 0.3,
-      type: "tween",
-    },
-  },
-};
-
 const offset = 6;
-
-const truncateText = (text: string | undefined, wordLimit: number) => {
-  if (!text) return "";
-  const words = text.split(" ");
-  if (words.length > wordLimit) {
-    return words.slice(0, wordLimit).join(" ") + "...";
-  }
-  return text;
-};
 
 function Home() {
   const history = useHistory();
   const bigMovieMatch = useRouteMatch<{ movieId: string }>(
     netflixBasePath + "/movies/:movieId"
   );
-  const { scrollY } = useScroll();
-  const { data, isLoading } = useQuery<IGetMoviesResult>(
-    ["movies", "nowPlaying"],
-    getMovies
-  );
-  const [index, setIndex] = useState(0);
-  const [leaving, setLeaving] = useState(false);
-  const increaseIndex = () => {
-    if (data) {
-      if (leaving) return;
-      toggleLeaving();
-      const totalMovies = data.results.length - 1;
-      const maxIndex = Math.floor(totalMovies / offset) - 1;
-      setIndex((prev) => (prev === maxIndex ? 0 : prev + 1));
-    }
-  };
-  const toggleLeaving = () => setLeaving((prev) => !prev);
   const onBoxClicked = (movieId: number) => {
     history.push(`${netflixBasePath}/movies/${movieId}`);
   };
-  const onOverlayClick = () => history.goBack();
+
+  // Movie-nowPlaying
+  const { data: dataNowPlaying, isLoading: isLoadingNowPlaying } =
+    useQuery<IGetMoviesResult>(["movies", "nowPlaying"], () =>
+      getMovies({ type: "now_playing" })
+    );
   const clickedMovie =
     bigMovieMatch?.params.movieId &&
-    data?.results.find((movie) => movie.id === +bigMovieMatch.params.movieId);
+    dataNowPlaying?.results.find(
+      (movie) => movie.id === +bigMovieMatch.params.movieId
+    );
+  const banner = dataNowPlaying?.results[0];
 
-  const overview = truncateText(data?.results[0].overview, 20);
+  // Movie-popular / Movie-topRated / Movie-upcoming
+  const { data: dataPopular, isLoading: isLoadingPopular } =
+    useQuery<IGetMoviesResult>(["movies", "popular"], () =>
+      getMovies({ type: "popular" })
+    );
+  const { data: dataTopRated, isLoading: isLoadingTopRated } =
+    useQuery<IGetMoviesResult>(["movies", "topRated"], () =>
+      getMovies({ type: "top_rated" })
+    );
+  const { data: dataUpcoming, isLoading: isLoadingUpcoming } =
+    useQuery<IGetMoviesResult>(["movies", "upcoming"], () =>
+      getMovies({ type: "upcoming" })
+    );
+
+  const isLoading =
+    isLoadingNowPlaying &&
+    isLoadingPopular &&
+    isLoadingTopRated &&
+    isLoadingUpcoming;
   return (
     <Wrapper>
       {isLoading ? (
         <Loader>Loading...</Loader>
       ) : (
         <>
-          <Banner
-            onClick={increaseIndex}
-            bgPhoto={makeImagePath(data?.results[0].backdrop_path || "")}
-          >
+          <Banner bgphoto={makeImagePath(banner?.backdrop_path || "")}>
             <BannerOverlay>
-              <Title>{data?.results[0].title}</Title>
-              <Overview>{overview}</Overview>
+              <Title>{banner?.title}</Title>
+              <Overview>{truncateText(banner?.overview, 15)}</Overview>
               <div>
-                <ButtonPlay onClick={() => null} />
-                <ButtonInfo onClick={() => null} />
+                <ButtonPlay
+                  onClick={() => banner?.id && onBoxClicked(banner.id)}
+                />
+                <ButtonInfo
+                  onClick={() => banner?.id && onBoxClicked(banner.id)}
+                />
               </div>
             </BannerOverlay>
           </Banner>
-          <Slider>
-            <AnimatePresence initial={false} onExitComplete={toggleLeaving}>
-              <Row
-                variants={rowVariants}
-                initial="hidden"
-                animate="visible"
-                exit="exit"
-                transition={{ type: "tween", duration: 1 }}
-                key={index}
-              >
-                {data?.results
-                  .slice(1)
-                  .slice(offset * index, offset * index + offset)
-                  .map((movie) => (
-                    <Box
-                      variants={boxVariants}
-                      layoutId={movie.id + ""}
-                      key={movie.id}
-                      whileHover="hover"
-                      initial="normal"
-                      transition={{ type: "tween" }}
-                      onClick={() => onBoxClicked(movie.id)}
-                      bgPhoto={makeImagePath(movie.backdrop_path, "w500")}
-                    >
-                      <Info variants={infoVariants}>
-                        <h4>{movie.title}</h4>
-                      </Info>
-                    </Box>
-                  ))}
-              </Row>
-            </AnimatePresence>
-          </Slider>
+          {dataNowPlaying && (
+            <Slider
+              style={{ top: "-120px" }}
+              title="지금 상영중"
+              data={dataNowPlaying}
+              offset={offset}
+              isFirstSlider={true}
+            />
+          )}
+          {dataPopular && (
+            <Slider
+              style={{ top: "-120px" }}
+              title="인기 영화"
+              data={dataPopular}
+              offset={offset}
+            />
+          )}
+          {dataTopRated && (
+            <Slider
+              style={{ top: "-120px" }}
+              title="평점 높은 영화"
+              data={dataTopRated}
+              offset={offset}
+            />
+          )}
+          {dataUpcoming && (
+            <Slider
+              style={{ top: "-120px" }}
+              title="개봉 예정작"
+              data={dataUpcoming}
+              offset={offset}
+            />
+          )}
           <AnimatePresence>
             {bigMovieMatch ? (
               <>
                 <Overlay
-                  onClick={onOverlayClick}
+                  onClick={() => history.goBack()}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                 >
-                  <BigMovie
-                    style={{ top: scrollY.get() + 100 }}
-                    layoutId={bigMovieMatch.params.movieId + ""}
-                  >
+                  <BigMovie layoutId={bigMovieMatch.params.movieId + ""}>
                     {clickedMovie && (
                       <>
                         <BigCover
-                          style={{
-                            backgroundImage: `linear-gradient(to top, black, transparent), url(${makeImagePath(
-                              clickedMovie.backdrop_path,
-                              "w500"
-                            )})`,
-                          }}
+                          bgphoto={makeImagePath(
+                            clickedMovie?.backdrop_path || ""
+                          )}
                         />
                         <BigTitle>{clickedMovie.title}</BigTitle>
-                        <BigOverview>{clickedMovie.overview}</BigOverview>
+                        <ButtonContainer>
+                          <button>
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              role="img"
+                              viewBox="0 0 24 24"
+                              width="24"
+                              height="24"
+                              data-icon="PlayStandard"
+                              aria-hidden="true"
+                            >
+                              <path
+                                d="M5 2.69127C5 1.93067 5.81547 1.44851 6.48192 1.81506L23.4069 11.1238C24.0977 11.5037 24.0977 12.4963 23.4069 12.8762L6.48192 22.1849C5.81546 22.5515 5 22.0693 5 21.3087V2.69127Z"
+                                fill="currentColor"
+                              ></path>
+                            </svg>
+                          </button>
+                          <button>
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              role="img"
+                              viewBox="0 0 24 24"
+                              width="24"
+                              height="24"
+                              data-icon="PlusStandard"
+                              aria-hidden="true"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                clipRule="evenodd"
+                                d="M11 11V2H13V11H22V13H13V22H11V13H2V11H11Z"
+                                fill="currentColor"
+                              ></path>
+                            </svg>
+                          </button>
+                        </ButtonContainer>
+                        <BigOverview>
+                          {truncateText(clickedMovie.overview, 50)}
+                        </BigOverview>
                       </>
                     )}
                   </BigMovie>
