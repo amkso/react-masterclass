@@ -6,9 +6,12 @@ export interface IMovie {
   poster_path: string;
   title: string;
   overview: string;
+  release_date: string;
+  popularity: number;
+  genre_ids: number[];
 }
 
-export interface IGetMoviesResult {
+export interface IGetMovieResult {
   dates: {
     maximum: string;
     minimum: string;
@@ -17,6 +20,36 @@ export interface IGetMoviesResult {
   results: IMovie[];
   total_pages: number;
   total_results: number;
+}
+
+export interface ISeries {
+  id: number;
+  name: string;
+  backdrop_path: string;
+  poster_path: string;
+  overview: string;
+  first_air_date: string;
+  genre_ids: number[];
+}
+
+export interface IGetSeriesResult {
+  page: number;
+  results: ISeries[];
+  total_pages: number;
+  total_results: number;
+}
+
+interface IGenre {
+  id: number;
+  name: string;
+}
+
+export interface IMovieGenreId {
+  genres: IGenre[];
+}
+
+export interface ITvGenreId {
+  genres: IGenre[];
 }
 
 const options = {
@@ -35,5 +68,27 @@ export function getMovies({
 }) {
   return fetch(`${BASE_PATH}/movie/${type}?language=ko&page=1`, options)
     .then((response) => response.json())
+    .catch((err) => console.error(err));
+}
+
+export function getTvSeries({
+  type,
+}: {
+  type: "airing_today" | "on_the_air" | "popular" | "top_rated";
+}) {
+  return fetch(`${BASE_PATH}/tv/${type}?language=ko&page=1`, options)
+    .then((response) => response.json())
+    .catch((err) => console.error(err));
+}
+
+export function getMoviesGenreId() {
+  return fetch(`${BASE_PATH}/genre/movie/list?language=ko`, options)
+    .then((res) => res.json())
+    .catch((err) => console.error(err));
+}
+
+export function getTvGenreId() {
+  return fetch(`${BASE_PATH}/genre/tv/list?language=ko`, options)
+    .then((res) => res.json())
     .catch((err) => console.error(err));
 }

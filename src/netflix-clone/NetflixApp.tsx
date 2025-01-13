@@ -4,9 +4,6 @@ import Search from "./Routes/Search";
 import Series from "./Routes/Series";
 import Header from "./Components/Header";
 import Movie from "./Routes/Movie";
-import NewContent from "./Routes/NewContent";
-import FavorList from "./Routes/FavorList";
-import LangSearch from "./Routes/LangSearch";
 import { netflixBasePath } from "../Routes/Netflix";
 
 function NetflixApp() {
@@ -20,20 +17,13 @@ function NetflixApp() {
         <Route path={netflixBasePath + "/movie"}>
           <Movie />
         </Route>
-        <Route path={netflixBasePath + "/newcontent"}>
-          <NewContent />
-        </Route>
-        <Route path={netflixBasePath + "/favorlist"}>
-          <FavorList />
-        </Route>
-        <Route path={netflixBasePath + "/langsearch"}>
-          <LangSearch />
-        </Route>
         <Route path={netflixBasePath + "/search"}>
           <Search />
         </Route>
         <Route
-          path={["/", "/movies/:movieId"].map((item) => netflixBasePath + item)}
+          path={["/", "/movies/:movieId", "/series/:seriesId"].map(
+            (item) => netflixBasePath + item
+          )}
         >
           <Home />
         </Route>

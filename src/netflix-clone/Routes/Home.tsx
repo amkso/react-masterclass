@@ -1,6 +1,6 @@
 import { useQuery } from "react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { getMovies, IGetMoviesResult } from "../api";
+import { getMovies, IGetMovieResult } from "../api";
 import styled from "styled-components";
 import { makeImagePath, truncateText } from "../utils";
 import { useHistory, useRouteMatch } from "react-router-dom";
@@ -66,6 +66,7 @@ const Overview = styled.p`
 
 const Overlay = styled(motion.div)`
   position: fixed;
+  z-index: 10;
   top: 0;
   width: 100%;
   height: 100%;
@@ -129,11 +130,15 @@ const BigOverview = styled.p`
   font-size: 20px;
   line-height: 1.2;
   padding: 10px 40px;
+  margin-bottom: 20px;
   color: ${(props) => props.theme.white.lighter};
   top: -80px;
 `;
 
 const offset = 6;
+
+let rowNum = 0;
+const setRowNum = (num: number) => (rowNum = num);
 
 function Home() {
   const history = useHistory();
@@ -146,28 +151,43 @@ function Home() {
 
   // Movie-nowPlaying
   const { data: dataNowPlaying, isLoading: isLoadingNowPlaying } =
-    useQuery<IGetMoviesResult>(["movies", "nowPlaying"], () =>
+    useQuery<IGetMovieResult>(["movies", "nowPlaying"], () =>
       getMovies({ type: "now_playing" })
-    );
-  const clickedMovie =
-    bigMovieMatch?.params.movieId &&
-    dataNowPlaying?.results.find(
-      (movie) => movie.id === +bigMovieMatch.params.movieId
     );
   const banner = dataNowPlaying?.results[0];
 
   // Movie-popular / Movie-topRated / Movie-upcoming
   const { data: dataPopular, isLoading: isLoadingPopular } =
-    useQuery<IGetMoviesResult>(["movies", "popular"], () =>
+    useQuery<IGetMovieResult>(["movies", "popular"], () =>
       getMovies({ type: "popular" })
     );
   const { data: dataTopRated, isLoading: isLoadingTopRated } =
-    useQuery<IGetMoviesResult>(["movies", "topRated"], () =>
+    useQuery<IGetMovieResult>(["movies", "topRated"], () =>
       getMovies({ type: "top_rated" })
     );
   const { data: dataUpcoming, isLoading: isLoadingUpcoming } =
-    useQuery<IGetMoviesResult>(["movies", "upcoming"], () =>
+    useQuery<IGetMovieResult>(["movies", "upcoming"], () =>
       getMovies({ type: "upcoming" })
+    );
+
+  const clickedRow = (() => {
+    switch (rowNum) {
+      case 0:
+        return dataNowPlaying;
+      case 1:
+        return dataPopular;
+      case 2:
+        return dataTopRated;
+      case 3:
+        return dataUpcoming;
+      default:
+        return null;
+    }
+  })();
+  const clickedMovie =
+    bigMovieMatch?.params.movieId &&
+    clickedRow?.results.find(
+      (movie) => movie.id === +bigMovieMatch.params.movieId
     );
 
   const isLoading =
@@ -196,37 +216,69 @@ function Home() {
             </BannerOverlay>
           </Banner>
           {dataNowPlaying && (
-            <Slider
-              style={{ top: "-120px" }}
-              title="지금 상영중"
-              data={dataNowPlaying}
-              offset={offset}
-              isFirstSlider={true}
-            />
+            <div
+              onClick={() => {
+                setRowNum(0);
+              }}
+            >
+              <Slider
+                style={{ top: "-120px" }}
+                title="지금 상영중"
+                data={dataNowPlaying}
+                datatype="movie"
+                offset={offset}
+                isFirstSlider={true}
+              />
+            </div>
           )}
           {dataPopular && (
-            <Slider
-              style={{ top: "-120px" }}
-              title="인기 영화"
-              data={dataPopular}
-              offset={offset}
-            />
+            <div
+              onClick={() => {
+                setRowNum(1);
+              }}
+            >
+              <Slider
+                style={{ top: "-120px" }}
+                title="인기 영화"
+                data={dataPopular}
+                datatype="movie"
+                offset={offset}
+                rowNum={1}
+              />
+            </div>
           )}
           {dataTopRated && (
-            <Slider
-              style={{ top: "-120px" }}
-              title="평점 높은 영화"
-              data={dataTopRated}
-              offset={offset}
-            />
+            <div
+              onClick={() => {
+                setRowNum(2);
+              }}
+            >
+              <Slider
+                style={{ top: "-120px" }}
+                title="평점 높은 영화"
+                data={dataTopRated}
+                datatype="movie"
+                offset={offset}
+                rowNum={2}
+              />
+            </div>
           )}
           {dataUpcoming && (
-            <Slider
-              style={{ top: "-120px" }}
-              title="개봉 예정작"
-              data={dataUpcoming}
-              offset={offset}
-            />
+            <div
+              onClick={() => {
+                setRowNum(3);
+              }}
+            >
+              <Slider
+                style={{ top: "-120px" }}
+                title="개봉 예정작"
+                data={dataUpcoming}
+                datatype="movie"
+                offset={offset}
+                rowNum={3}
+                isLastSlider={true}
+              />
+            </div>
           )}
           <AnimatePresence>
             {bigMovieMatch ? (
@@ -236,7 +288,9 @@ function Home() {
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                 >
-                  <BigMovie layoutId={bigMovieMatch.params.movieId + ""}>
+                  <BigMovie
+                    layoutId={`${rowNum}-${bigMovieMatch.params.movieId}`}
+                  >
                     {clickedMovie && (
                       <>
                         <BigCover
@@ -244,7 +298,9 @@ function Home() {
                             clickedMovie?.backdrop_path || ""
                           )}
                         />
-                        <BigTitle>{clickedMovie.title}</BigTitle>
+                        <BigTitle>{`${
+                          clickedMovie.title
+                        }(${clickedMovie.release_date.slice(0, 4)})`}</BigTitle>
                         <ButtonContainer>
                           <button>
                             <svg

@@ -1,4 +1,10 @@
 import { atom } from "recoil";
+import {
+  getMoviesGenreId,
+  getTvGenreId,
+  IMovieGenreId,
+  ITvGenreId,
+} from "./netflix-clone/api";
 
 // 1. Crypto-tracker Atoms
 export const isDarkAtom = atom({
@@ -19,8 +25,26 @@ interface IToDoState {
 export const toDoState = atom<IToDoState>({
   key: "toDo",
   default: {
-    "To Do": [], // 스페이스는 변수로 안되기에 "To Do"를 씀 아니면, To_Do를 써야함
+    "To Do": [],
     Doing: [],
     Done: [],
   },
+});
+
+// 3. Netflix clone
+export const genreIdsAtom = atom<{
+  movie: IMovieGenreId | null;
+  tv: ITvGenreId | null;
+}>({
+  key: "genreIds",
+  default: { movie: null, tv: null },
+  effects_UNSTABLE: [
+    ({ setSelf }) => {
+      Promise.all([getMoviesGenreId(), getTvGenreId()]).then(
+        ([movieData, tvData]) => {
+          setSelf({ movie: movieData, tv: tvData });
+        }
+      );
+    },
+  ],
 });

@@ -32,7 +32,7 @@ function Price({ coinId }: PriceProps) {
       ) : (
         <>
           <Apexchart
-            type="boxPlot"
+            type="boxPlot" // candlestick
             series={[
               {
                 name: "Price",
@@ -57,7 +57,7 @@ function Price({ coinId }: PriceProps) {
             ]}
             options={{
               theme: {
-                mode: isDark ? "dark" : "light",
+                mode: isDark ? "dark" : "dark",
               },
               chart: {
                 height: 300,

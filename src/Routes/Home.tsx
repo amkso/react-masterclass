@@ -1,4 +1,5 @@
-import { Link } from "react-router-dom";
+import { useEffect } from "react";
+import { useHistory } from "react-router-dom";
 import styled from "styled-components";
 
 const Wrapper = styled.div`
@@ -11,20 +12,24 @@ const Wrapper = styled.div`
   align-items: center;
 `;
 
-const Item = styled.div`
-  margin: 10px;
-  width: 400px;
-  height: 200px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: white;
-`;
+// const Item = styled.div`
+//   margin: 10px;
+//   width: 400px;
+//   height: 200px;
+//   display: flex;
+//   justify-content: center;
+//   align-items: center;
+//   background-color: white;
+// `;
 
 function Home() {
+  const history = useHistory();
+  useEffect(() => {
+    history.push("/Netflix");
+  }, [history]);
   return (
     <Wrapper>
-      <Link
+      {/* <Link
         to={{
           pathname: "/Crypto",
           state: {},
@@ -47,7 +52,7 @@ function Home() {
         }}
       >
         <Item>Netflix &rarr;</Item>
-      </Link>
+      </Link> */}
     </Wrapper>
   );
 }

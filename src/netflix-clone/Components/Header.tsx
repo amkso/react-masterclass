@@ -106,10 +106,6 @@ function Header() {
 
   const homeMatch = useRouteMatch(netflixBasePath);
   const seriesMatch = useRouteMatch(netflixBasePath + "/series");
-  const movieMatch = useRouteMatch(netflixBasePath + "/movie");
-  const newContentMatch = useRouteMatch(netflixBasePath + "/newcontent");
-  const favorListMatch = useRouteMatch(netflixBasePath + "/favorlist");
-  const langSearchMatch = useRouteMatch(netflixBasePath + "/langsearch");
 
   const inputAnimation = useAnimation();
   const navAnimation = useAnimation();
@@ -136,7 +132,7 @@ function Header() {
         navAnimation.start("top");
       }
     });
-  }, [scrollY]);
+  }, [scrollY, navAnimation]);
   const history = useHistory();
   const { register, handleSubmit } = useForm<IForm>();
   const onValid = (data: IForm) => {
@@ -179,28 +175,10 @@ function Header() {
               시리즈 {seriesMatch && <Circle layoutId="circle" />}
             </Link>
           </Item>
-          <Item>
-            <Link to={netflixBasePath + "/movie"}>
-              영화 {movieMatch && <Circle layoutId="circle" />}
-            </Link>
-          </Item>
-          <Item>
-            <Link to={netflixBasePath + "/newcontent"}>
-              NEW! 요즘 대세 콘텐츠
-              {newContentMatch && <Circle layoutId="circle" />}
-            </Link>
-          </Item>
-          <Item>
-            <Link to={netflixBasePath + "/favorlist"}>
-              내가 찜한 리스트 {favorListMatch && <Circle layoutId="circle" />}
-            </Link>
-          </Item>
-          <Item>
-            <Link to={netflixBasePath + "/langsearch"}>
-              언어별로 찾아보기
-              {langSearchMatch && <Circle layoutId="circle" />}
-            </Link>
-          </Item>
+          <Item>영화</Item>
+          <Item>NEW! 요즘 대세 콘텐츠</Item>
+          <Item>내가 찜한 리스트</Item>
+          <Item>언어별로 찾아보기</Item>
         </Items>
       </Col>
       <Col>

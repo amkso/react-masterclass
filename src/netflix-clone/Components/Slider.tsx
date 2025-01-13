@@ -1,10 +1,12 @@
 import { AnimatePresence, motion, Variants } from "framer-motion";
-import { IGetMoviesResult } from "../api";
+import { IGetMovieResult, IGetSeriesResult } from "../api";
 import styled from "styled-components";
 import { useState } from "react";
 import { makeImagePath, truncateText } from "../utils";
 import { netflixBasePath } from "../../Routes/Netflix";
 import { useHistory } from "react-router-dom";
+import { useRecoilValue } from "recoil";
+import { genreIdsAtom } from "../../atoms";
 
 const Title = styled.h1`
   display: inline-block;
@@ -48,9 +50,14 @@ const Info = styled(motion.div)`
       border: 2px solid rgba(255, 255, 255, 0.5);
     }
   }
-  div:last-child {
+  div:nth-child(3) {
+    margin-bottom: 15px;
     font-size: 14px;
     line-height: 1.1;
+  }
+  div:last-child {
+    font-size: 12px;
+    font-weight: 600;
   }
 `;
 
@@ -86,6 +93,7 @@ const Row = styled(motion.div)`
     transform-origin: center right;
   }
 `;
+
 const RowSide = styled.div`
   background-color: rgba(255, 255, 255, 0);
   position: absolute;
@@ -137,15 +145,15 @@ const boxVariants: Variants = {
   normal: {
     scale: 1,
   },
-  hover: {
+  hover: (isLastSlider) => ({
     scale: 1.3,
-    y: -100,
+    y: !isLastSlider ? -100 : -200,
     transition: {
       delay: 0.5,
       duration: 0.3,
       type: "tween",
     },
-  },
+  }),
 };
 
 const infoVariants: Variants = {
@@ -163,16 +171,22 @@ const infoVariants: Variants = {
 interface SliderProps {
   style?: object;
   title: string;
-  data: IGetMoviesResult;
+  data: IGetMovieResult | IGetSeriesResult;
+  datatype: "movie" | "series";
   offset: number;
   isFirstSlider?: boolean;
+  isLastSlider?: boolean;
+  rowNum?: number;
 }
 function Slider({
   style,
   title,
   data,
+  datatype,
   offset,
   isFirstSlider = false,
+  isLastSlider = false,
+  rowNum = 0,
 }: SliderProps) {
   const [index, setIndex] = useState(0);
   const [leaving, setLeaving] = useState(false);
@@ -199,10 +213,22 @@ function Slider({
   };
   const toggleLeaving = () => setLeaving((prev) => !prev);
   const history = useHistory();
-  const onBoxClicked = (movieId: number) => {
-    history.push(`${netflixBasePath}/movies/${movieId}`);
+  const onBoxClicked = (contentId: number) => {
+    const url =
+      datatype === "movie"
+        ? `${netflixBasePath}/movies/${contentId}`
+        : `${netflixBasePath}/series/${contentId}`;
+    history.push(url);
   };
 
+  const genreIds = useRecoilValue(genreIdsAtom);
+  const getGenreNameById = (id: number): string | undefined => {
+    const genreList = datatype === "movie" ? genreIds.movie : genreIds.tv;
+    if (!genreList) return undefined;
+    return genreList.genres.find(
+      (genre: { id: number; name: string }) => genre.id === id
+    )?.name;
+  };
   return (
     <Wrapper style={style}>
       <Title>{title}</Title>
@@ -229,16 +255,17 @@ function Slider({
           {data?.results
             .slice(isFirstSlider ? 1 : 0)
             .slice(offset * index, offset * (index + 1))
-            .map((movie) => (
+            .map((content) => (
               <Box
+                custom={isLastSlider}
                 variants={boxVariants}
-                layoutId={movie.id + Date.now() + ""}
-                key={movie.id}
+                layoutId={`${rowNum}-${content.id}`}
+                key={content.id}
                 whileHover="hover"
                 initial="normal"
                 transition={{ type: "tween" }}
-                onClick={() => onBoxClicked(movie.id)}
-                bgphoto={makeImagePath(movie.backdrop_path, "w500")}
+                onClick={() => onBoxClicked(content.id)}
+                bgphoto={makeImagePath(content.backdrop_path, "w500")}
               >
                 <Info variants={infoVariants}>
                   <div>
@@ -279,8 +306,13 @@ function Slider({
                       </svg>
                     </button>
                   </div>
-                  <h4>{movie.title}</h4>
-                  <div>{truncateText(movie.overview, 9)}</div>
+                  <h4>{"title" in content ? content.title : content.name}</h4>
+                  <div>{truncateText(content.overview, 9)}</div>
+                  <div>
+                    {content.genre_ids.map((id) => {
+                      return getGenreNameById(id) + " ";
+                    })}
+                  </div>
                 </Info>
               </Box>
             ))}
