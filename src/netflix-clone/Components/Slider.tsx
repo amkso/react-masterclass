@@ -1,5 +1,10 @@
 import { AnimatePresence, motion, Variants } from "framer-motion";
-import { IGetMovieResult, IGetSeriesResult } from "../api";
+import {
+  IGetMovieResult,
+  IGetMovieSearchResult,
+  IGetSeriesResult,
+  IGetTvSearchResult,
+} from "../api";
 import styled from "styled-components";
 import { useState } from "react";
 import { makeImagePath, truncateText } from "../utils";
@@ -170,13 +175,18 @@ const infoVariants: Variants = {
 
 interface SliderProps {
   style?: object;
-  title: string;
-  data: IGetMovieResult | IGetSeriesResult;
-  datatype: "movie" | "series";
+  title?: string;
+  data:
+    | IGetMovieResult
+    | IGetSeriesResult
+    | IGetMovieSearchResult
+    | IGetTvSearchResult;
+  datatype: "movie" | "series" | "search_movie" | "search_tv";
   offset: number;
   isFirstSlider?: boolean;
   isLastSlider?: boolean;
   rowNum?: number;
+  nowPath?: string;
 }
 function Slider({
   style,
@@ -214,10 +224,21 @@ function Slider({
   const toggleLeaving = () => setLeaving((prev) => !prev);
   const history = useHistory();
   const onBoxClicked = (contentId: number) => {
-    const url =
-      datatype === "movie"
-        ? `${netflixBasePath}/movies/${contentId}`
-        : `${netflixBasePath}/series/${contentId}`;
+    const url = (() => {
+      switch (datatype) {
+        case "movie":
+          return `${netflixBasePath}/movies/${contentId}`;
+        case "series":
+          return `${netflixBasePath}/series/${contentId}`;
+        case "search_movie":
+        case "search_tv":
+          const searchParams = new URLSearchParams(window.location.search);
+          searchParams.set("id", contentId.toString());
+          return `${netflixBasePath}/search?${searchParams.toString()}`;
+        default:
+          return `${netflixBasePath}`;
+      }
+    })();
     history.push(url);
   };
 

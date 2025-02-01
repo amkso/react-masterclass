@@ -3,7 +3,6 @@ import Home from "./Routes/Home";
 import Search from "./Routes/Search";
 import Series from "./Routes/Series";
 import Header from "./Components/Header";
-import Movie from "./Routes/Movie";
 import { netflixBasePath } from "../Routes/Netflix";
 
 function NetflixApp() {
@@ -13,9 +12,6 @@ function NetflixApp() {
       <Switch>
         <Route path={netflixBasePath + "/series"}>
           <Series />
-        </Route>
-        <Route path={netflixBasePath + "/movie"}>
-          <Movie />
         </Route>
         <Route path={netflixBasePath + "/search"}>
           <Search />

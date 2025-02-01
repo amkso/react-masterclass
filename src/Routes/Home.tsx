@@ -22,6 +22,7 @@ const Wrapper = styled.div`
 //   background-color: white;
 // `;
 
+// this component is not used in the final project
 function Home() {
   const history = useHistory();
   useEffect(() => {

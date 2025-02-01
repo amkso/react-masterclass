@@ -1,5 +1,7 @@
 export function makeImagePath(id: string, format?: string) {
-  return `https://image.tmdb.org/t/p/${format ? format : "original"}/${id}`;
+  return id
+    ? `https://image.tmdb.org/t/p/${format ? format : "original"}/${id}`
+    : `https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg`;
 }
 
 // truncateText function

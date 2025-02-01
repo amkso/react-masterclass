@@ -184,7 +184,7 @@ function Home() {
         return null;
     }
   })();
-  const clickedMovie =
+  const clicked =
     bigMovieMatch?.params.movieId &&
     clickedRow?.results.find(
       (movie) => movie.id === +bigMovieMatch.params.movieId
@@ -291,16 +291,14 @@ function Home() {
                   <BigMovie
                     layoutId={`${rowNum}-${bigMovieMatch.params.movieId}`}
                   >
-                    {clickedMovie && (
+                    {clicked && (
                       <>
                         <BigCover
-                          bgphoto={makeImagePath(
-                            clickedMovie?.backdrop_path || ""
-                          )}
+                          bgphoto={makeImagePath(clicked?.backdrop_path || "")}
                         />
                         <BigTitle>{`${
-                          clickedMovie.title
-                        }(${clickedMovie.release_date.slice(0, 4)})`}</BigTitle>
+                          clicked.title
+                        }(${clicked.release_date.slice(0, 4)})`}</BigTitle>
                         <ButtonContainer>
                           <button>
                             <svg
@@ -340,7 +338,7 @@ function Home() {
                           </button>
                         </ButtonContainer>
                         <BigOverview>
-                          {truncateText(clickedMovie.overview, 50)}
+                          {truncateText(clicked.overview, 50)}
                         </BigOverview>
                       </>
                     )}

@@ -146,8 +146,8 @@ function Series() {
   const bigSeriesMatch = useRouteMatch<{ seriresId: string }>(
     nowPath + "/:seriresId"
   );
-  const onBoxClicked = (conteId: number) => {
-    history.push(`${nowPath}/${conteId}`);
+  const onBoxClicked = (contentId: number) => {
+    history.push(`${nowPath}/${contentId}`);
   };
 
   // Series-popular
@@ -166,10 +166,6 @@ function Series() {
     useQuery<IGetSeriesResult>(["series", "on_the_air"], () =>
       getTvSeries({ type: "on_the_air" })
     );
-  const { data: dataAiringToday, isLoading: isLoadingAiringToday } =
-    useQuery<IGetSeriesResult>(["series", "airing_today"], () =>
-      getTvSeries({ type: "airing_today" })
-    );
 
   const clickedRow = (() => {
     switch (rowNum) {
@@ -179,23 +175,17 @@ function Series() {
         return dataTopRated;
       case 2:
         return dataOnTheAir;
-      case 3:
-        return dataAiringToday;
       default:
         return null;
     }
   })();
-  const clickedMovie =
+  const clickedSeries =
     bigSeriesMatch?.params.seriresId &&
     clickedRow?.results.find(
       (serires) => serires.id === +bigSeriesMatch.params.seriresId
     );
 
-  const isLoading =
-    isLoadingAiringToday &&
-    isLoadingOnTheAir &&
-    isLoadingPopular &&
-    isLoadingTopRated;
+  const isLoading = isLoadingOnTheAir && isLoadingPopular && isLoadingTopRated;
 
   return (
     <Wrapper>
@@ -262,22 +252,6 @@ function Series() {
                 datatype="series"
                 offset={offset}
                 rowNum={2}
-              />
-            </div>
-          )}
-          {dataAiringToday && (
-            <div
-              onClick={() => {
-                setRowNum(3);
-              }}
-            >
-              <Slider
-                style={{ top: "-120px" }}
-                title="오늘 방영 예정"
-                data={dataAiringToday}
-                datatype="series"
-                offset={offset}
-                rowNum={3}
                 isLastSlider={true}
               />
             </div>
@@ -293,16 +267,16 @@ function Series() {
                   <BigMovie
                     layoutId={`${rowNum}-${bigSeriesMatch.params.seriresId}`}
                   >
-                    {clickedMovie && (
+                    {clickedSeries && (
                       <>
                         <BigCover
                           bgphoto={makeImagePath(
-                            clickedMovie?.backdrop_path || ""
+                            clickedSeries?.backdrop_path || ""
                           )}
                         />
                         <BigTitle>{`${
-                          clickedMovie.name
-                        }(${clickedMovie.first_air_date.slice(
+                          clickedSeries.name
+                        }(${clickedSeries.first_air_date.slice(
                           0,
                           4
                         )})`}</BigTitle>
@@ -345,7 +319,7 @@ function Series() {
                           </button>
                         </ButtonContainer>
                         <BigOverview>
-                          {truncateText(clickedMovie.overview, 50)}
+                          {truncateText(clickedSeries.overview, 50)}
                         </BigOverview>
                       </>
                     )}
