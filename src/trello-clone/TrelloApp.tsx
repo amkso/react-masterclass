@@ -38,7 +38,7 @@ function TrelloApp() {
   const [toDos, setToDos] = useRecoilState(toDoState);
   const onDragEnd = (info: DropResult) => {
     console.log(info);
-    const { destination, draggableId, source } = info;
+    const { destination, source } = info;
 
     if (!destination) return; // destination === undefined일 경우
 

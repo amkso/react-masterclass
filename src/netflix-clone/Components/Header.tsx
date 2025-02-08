@@ -150,10 +150,10 @@ function Header() {
       <Col>
         <Logo
           onClick={
-            // on Logo click, go to the home page of the Netflix and refresh the page
+            // on Logo click, go to the home page of the Netflix
             () => {
               history.push(netflixBasePath);
-              window.location.reload();
+              window.scrollTo(0, 0);
             }
           }
           xmlns="http://www.w3.org/2000/svg"

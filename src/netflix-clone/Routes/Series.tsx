@@ -19,7 +19,7 @@ const Loader = styled.div`
   align-items: center;
 `;
 
-const Banner = styled.div<{ bgphoto: string }>`
+const Banner = styled.div<{ $bgphoto: string }>`
   height: 100vh;
   position: relative;
   display: flex;
@@ -31,7 +31,7 @@ const Banner = styled.div<{ bgphoto: string }>`
       rgba(0, 0, 0, 0),
       rgba(20, 20, 20, 1)
     ),
-    url(${(props) => props.bgphoto});
+    url(${(props) => props.$bgphoto});
   background-size: cover;
 `;
 
@@ -87,10 +87,10 @@ const BigMovie = styled(motion.div)`
   background-color: rgba(20, 20, 20, 1);
 `;
 
-const BigCover = styled.div<{ bgphoto: string }>`
+const BigCover = styled.div<{ $bgphoto: string }>`
   width: 100%;
   background-image: linear-gradient(rgba(0, 0, 0, 0), rgba(20, 20, 20, 1)),
-    url(${(props) => props.bgphoto});
+    url(${(props) => props.$bgphoto});
   background-size: cover;
   background-position: center center;
   height: 400px;
@@ -193,7 +193,7 @@ function Series() {
         <Loader>Loading...</Loader>
       ) : (
         <>
-          <Banner bgphoto={makeImagePath(banner?.backdrop_path || "")}>
+          <Banner $bgphoto={makeImagePath(banner?.backdrop_path || "")}>
             <BannerOverlay>
               <Title>{banner?.name}</Title>
               <Overview>{truncateText(banner?.overview, 15)}</Overview>
@@ -270,7 +270,7 @@ function Series() {
                     {clickedSeries && (
                       <>
                         <BigCover
-                          bgphoto={makeImagePath(
+                          $bgphoto={makeImagePath(
                             clickedSeries?.backdrop_path || ""
                           )}
                         />

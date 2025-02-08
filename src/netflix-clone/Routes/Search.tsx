@@ -61,10 +61,10 @@ const BigMovie = styled(motion.div)`
   background-color: rgba(20, 20, 20, 1);
 `;
 
-const BigCover = styled.div<{ bgphoto: string }>`
+const BigCover = styled.div<{ $bgphoto: string }>`
   width: 100%;
   background-image: linear-gradient(rgba(0, 0, 0, 0), rgba(20, 20, 20, 1)),
-    url(${(props) => props.bgphoto});
+    url(${(props) => props.$bgphoto});
   background-size: cover;
   background-position: center center;
   height: 400px;
@@ -203,7 +203,7 @@ function Search() {
                     {clicked && (
                       <>
                         <BigCover
-                          bgphoto={makeImagePath(clicked?.backdrop_path || "")}
+                          $bgphoto={makeImagePath(clicked?.backdrop_path || "")}
                         />
                         <BigTitle>{`${
                           "title" in clicked ? clicked.title : clicked.name
