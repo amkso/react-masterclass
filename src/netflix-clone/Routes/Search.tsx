@@ -11,6 +11,7 @@ import { useQuery } from "react-query";
 import { truncateText } from "../utils";
 import { AnimatePresence, motion } from "framer-motion";
 import { makeImagePath } from "../utils";
+import { useEffect } from "react";
 
 const Wrapper = styled.div``;
 
@@ -21,15 +22,12 @@ const Loader = styled.div`
   align-items: center;
 `;
 
-const Dummy = styled.div`
-  height: 20vh;
-`;
-
 const Title = styled.div`
   padding-left: 60px;
   font-size: 40px;
   font-weight: bold;
   height: 10vh;
+  margin-top: 20vh;
   margin-bottom: 20px;
 `;
 
@@ -114,6 +112,13 @@ const offset = 6;
 let rowNum = 0;
 const setRowNum = (num: number) => (rowNum = num);
 
+// 공통 쿼리 옵션 정의
+const queryOptions = {
+  staleTime: 1000 * 60 * 5, // 5분간 fresh
+  cacheTime: 1000 * 60 * 10, // 10분간 캐시 유지
+  keepPreviousData: true, // 새 쿼리 동안 이전 데이터 유지
+};
+
 function Search() {
   const location = useLocation();
   const history = useHistory();
@@ -126,13 +131,17 @@ function Search() {
 
   // Moive
   const { data: movieSearchData, isLoading: movieSearchLoading } =
-    useQuery<IGetMovieSearchResult>(["search_movie", keyword], () =>
-      getMovieSearch(keyword || "")
+    useQuery<IGetMovieSearchResult>(
+      ["search_movie", keyword],
+      () => getMovieSearch(keyword || ""),
+      queryOptions
     );
   // Tv
   const { data: tvSearchData, isLoading: tvSearchLoading } =
-    useQuery<IGetTvSearchResult>(["search_tv", keyword], () =>
-      getTvSearch(keyword || "")
+    useQuery<IGetTvSearchResult>(
+      ["search_tv", keyword],
+      () => getTvSearch(keyword || ""),
+      queryOptions
     );
 
   const findContentById = (id: string) => {
@@ -149,13 +158,26 @@ function Search() {
   const clicked = selectedId && findContentById(selectedId);
 
   const isLoading = movieSearchLoading || tvSearchLoading;
+  // 모달이 열리거나 닫힐 때 스크롤 제어
+  useEffect(() => {
+    if (bigBoardMatch) {
+      // 모달이 열릴 때
+      document.body.style.overflow = "hidden";
+    } else {
+      // 모달이 닫힐 때
+      document.body.style.overflow = "unset";
+    }
+    // cleanup 함수
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [bigBoardMatch]);
   return (
     <>
       {isLoading ? (
         <Loader>Loading...</Loader>
       ) : (
         <Wrapper>
-          <Dummy />
           <Title>검색 결과</Title>
           <Container>
             {movieSearchData && (
@@ -169,7 +191,6 @@ function Search() {
                   data={movieSearchData}
                   datatype="search_movie"
                   offset={offset}
-                  isFirstSlider={true}
                   rowNum={0}
                 />
               </div>
@@ -251,7 +272,7 @@ function Search() {
                           </button>
                         </ButtonContainer>
                         <BigOverview>
-                          {truncateText(clicked.overview, 50)}
+                          {truncateText(clicked.overview, 40)}
                         </BigOverview>
                       </>
                     )}

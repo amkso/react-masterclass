@@ -1,12 +1,15 @@
 import { useQuery } from "react-query";
+import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { getTvSeries, IGetSeriesResult } from "../api";
-import styled from "styled-components";
-import { makeImagePath, truncateText } from "../utils";
 import { useHistory, useRouteMatch } from "react-router-dom";
+import { LazyLoadImage } from "react-lazy-load-image-component";
+import styled from "styled-components";
+import { getTvSeries, IGetSeriesResult } from "../api";
+import { makeImagePath, truncateText } from "../utils";
 import { netflixBasePath } from "../../Routes/Netflix";
 import { ButtonPlay, ButtonInfo } from "../Components/Button";
 import Slider from "../Components/Slider";
+import LargeActionButtons from "../Components/SliderInfo/LargeActionButtons";
 
 const Wrapper = styled.div`
   background-color: rgba(20, 20, 20, 1);
@@ -19,20 +22,25 @@ const Loader = styled.div`
   align-items: center;
 `;
 
-const Banner = styled.div<{ $bgphoto: string }>`
+const Banner = styled.div`
   height: 100vh;
   position: relative;
   display: flex;
   flex-direction: column;
   justify-content: center;
   padding: 0 60px;
-  background-image: linear-gradient(
-      rgba(20, 20, 20, 1),
-      rgba(0, 0, 0, 0),
-      rgba(20, 20, 20, 1)
-    ),
-    url(${(props) => props.$bgphoto});
-  background-size: cover;
+  background-color: rgba(20, 20, 20, 1);
+`;
+
+const BannerImage = styled(LazyLoadImage)`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+  mask-image: linear-gradient(to bottom, rgba(20, 20, 20, 1), rgba(0, 0, 0, 0));
 `;
 
 const BannerOverlay = styled.div`
@@ -87,13 +95,18 @@ const BigMovie = styled(motion.div)`
   background-color: rgba(20, 20, 20, 1);
 `;
 
-const BigCover = styled.div<{ $bgphoto: string }>`
+const BigCover = styled.div`
   width: 100%;
-  background-image: linear-gradient(rgba(0, 0, 0, 0), rgba(20, 20, 20, 1)),
-    url(${(props) => props.$bgphoto});
-  background-size: cover;
-  background-position: center center;
   height: 400px;
+  position: relative;
+  background-color: rgba(20, 20, 20, 1);
+`;
+
+const BigCoverImage = styled(LazyLoadImage)`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  mask-image: linear-gradient(to bottom, rgba(20, 20, 20, 1), rgba(0, 0, 0, 0));
 `;
 
 const BigTitle = styled.h3`
@@ -102,28 +115,6 @@ const BigTitle = styled.h3`
   font-size: 46px;
   font-weight: 800;
   position: relative;
-`;
-
-const ButtonContainer = styled.div`
-  padding: 10px 40px;
-  display: flex;
-  justify-content: flex-start;
-  button {
-    border: none;
-    width: 60px;
-    height: 60px;
-    border-radius: 30px;
-    margin-right: 4px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-    &:last-child {
-      color: white;
-      background-color: rgba(20, 20, 20, 0.3);
-      border: 2px solid rgba(255, 255, 255, 0.5);
-    }
-  }
 `;
 
 const BigOverview = styled.p`
@@ -140,6 +131,13 @@ const offset = 6;
 let rowNum = 0;
 const setRowNum = (num: number) => (rowNum = num);
 
+// 공통 쿼리 옵션 정의
+const queryOptions = {
+  staleTime: 1000 * 60 * 5, // 5분간 fresh
+  cacheTime: 1000 * 60 * 10, // 10분간 캐시 유지
+  keepPreviousData: true, // 새 쿼리 동안 이전 데이터 유지
+};
+
 function Series() {
   const nowPath = netflixBasePath + "/series";
   const history = useHistory();
@@ -150,21 +148,42 @@ function Series() {
     history.push(`${nowPath}/${contentId}`);
   };
 
+  // 모달 스크롤 제어
+  useEffect(() => {
+    if (bigSeriesMatch) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    // cleanup
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [bigSeriesMatch]);
+
   // Series-popular
   const { data: dataPopular, isLoading: isLoadingPopular } =
-    useQuery<IGetSeriesResult>(["series", "popular"], () =>
-      getTvSeries({ type: "popular" })
+    useQuery<IGetSeriesResult>(
+      ["series", "popular"],
+      () => getTvSeries({ type: "popular" }),
+      queryOptions
     );
   const banner = dataPopular?.results[0];
 
-  // Series-TopRated / Series-onTheAir / Series-airingToday
+  // Series-TopRated
   const { data: dataTopRated, isLoading: isLoadingTopRated } =
-    useQuery<IGetSeriesResult>(["series", "top_rated"], () =>
-      getTvSeries({ type: "top_rated" })
+    useQuery<IGetSeriesResult>(
+      ["series", "top_rated"],
+      () => getTvSeries({ type: "top_rated" }),
+      queryOptions
     );
+
+  // Series-onTheAir
   const { data: dataOnTheAir, isLoading: isLoadingOnTheAir } =
-    useQuery<IGetSeriesResult>(["series", "on_the_air"], () =>
-      getTvSeries({ type: "on_the_air" })
+    useQuery<IGetSeriesResult>(
+      ["series", "on_the_air"],
+      () => getTvSeries({ type: "on_the_air" }),
+      queryOptions
     );
 
   const clickedRow = (() => {
@@ -193,7 +212,12 @@ function Series() {
         <Loader>Loading...</Loader>
       ) : (
         <>
-          <Banner $bgphoto={makeImagePath(banner?.backdrop_path || "")}>
+          <Banner>
+            <BannerImage
+              src={makeImagePath(banner?.backdrop_path || "")}
+              alt={banner?.name}
+              threshold={100}
+            />
             <BannerOverlay>
               <Title>{banner?.name}</Title>
               <Overview>{truncateText(banner?.overview, 15)}</Overview>
@@ -269,55 +293,25 @@ function Series() {
                   >
                     {clickedSeries && (
                       <>
-                        <BigCover
-                          $bgphoto={makeImagePath(
-                            clickedSeries?.backdrop_path || ""
-                          )}
-                        />
+                        <BigCover>
+                          <BigCoverImage
+                            src={makeImagePath(
+                              clickedSeries?.backdrop_path || ""
+                            )}
+                            alt={clickedSeries?.name}
+                            threshold={100}
+                          />
+                        </BigCover>
                         <BigTitle>{`${
                           clickedSeries.name
                         }(${clickedSeries.first_air_date.slice(
                           0,
                           4
                         )})`}</BigTitle>
-                        <ButtonContainer>
-                          <button>
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              role="img"
-                              viewBox="0 0 24 24"
-                              width="24"
-                              height="24"
-                              data-icon="PlayStandard"
-                              aria-hidden="true"
-                            >
-                              <path
-                                d="M5 2.69127C5 1.93067 5.81547 1.44851 6.48192 1.81506L23.4069 11.1238C24.0977 11.5037 24.0977 12.4963 23.4069 12.8762L6.48192 22.1849C5.81546 22.5515 5 22.0693 5 21.3087V2.69127Z"
-                                fill="currentColor"
-                              ></path>
-                            </svg>
-                          </button>
-                          <button>
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              role="img"
-                              viewBox="0 0 24 24"
-                              width="24"
-                              height="24"
-                              data-icon="PlusStandard"
-                              aria-hidden="true"
-                            >
-                              <path
-                                fillRule="evenodd"
-                                clipRule="evenodd"
-                                d="M11 11V2H13V11H22V13H13V22H11V13H2V11H11Z"
-                                fill="currentColor"
-                              ></path>
-                            </svg>
-                          </button>
-                        </ButtonContainer>
+                        <LargeActionButtons
+                          content={clickedSeries}
+                          datatype="series"
+                        />
                         <BigOverview>
                           {truncateText(clickedSeries.overview, 50)}
                         </BigOverview>

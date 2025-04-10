@@ -5,6 +5,9 @@ import {
   IMovieGenreId,
   ITvGenreId,
 } from "./netflix-clone/api";
+import { recoilPersist } from "recoil-persist";
+
+const { persistAtom } = recoilPersist();
 
 // 1. Crypto-tracker Atoms
 export const isDarkAtom = atom({
@@ -21,7 +24,6 @@ export interface ITodo {
 interface IToDoState {
   [key: string]: ITodo[];
 }
-
 export const toDoState = atom<IToDoState>({
   key: "toDo",
   default: {
@@ -47,4 +49,24 @@ export const genreIdsAtom = atom<{
       );
     },
   ],
+});
+
+// 북마크 타입 정의
+interface BookmarkedContent {
+  id: number;
+  title?: string; // 영화의 경우
+  name?: string; // TV 시리즈의 경우
+  backdrop_path: string;
+  poster_path: string;
+  overview: string;
+  type: "movie" | "series";
+  release_date?: string; // 영화의 경우
+  first_air_date?: string; // TV 시리즈의 경우
+}
+
+// 북마크 atom
+export const bookmarkState = atom<BookmarkedContent[]>({
+  key: "bookmarkState",
+  default: [],
+  effects_UNSTABLE: [persistAtom],
 });

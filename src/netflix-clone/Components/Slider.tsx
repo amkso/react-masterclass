@@ -7,11 +7,13 @@ import {
 } from "../api";
 import styled from "styled-components";
 import { useState } from "react";
-import { makeImagePath, truncateText } from "../utils";
+import { makeImagePath } from "../utils";
 import { netflixBasePath } from "../../Routes/Netflix";
 import { useHistory } from "react-router-dom";
 import { useRecoilValue } from "recoil";
 import { genreIdsAtom } from "../../atoms";
+import { LazyLoadImage } from "react-lazy-load-image-component";
+import SliderInfo from "./SliderInfo/SliderInfo";
 
 const Title = styled.h1`
   display: inline-block;
@@ -20,70 +22,33 @@ const Title = styled.h1`
   margin-left: 60px;
 `;
 
-const Info = styled(motion.div)`
-  padding: 20px;
-  background-color: ${(props) => props.theme.black.lighter};
-  opacity: 0;
-  visibility: hidden;
-  position: absolute;
+const Info = styled(SliderInfo)``;
+
+const BoxImage = styled(LazyLoadImage)`
   width: 100%;
-  top: 100%;
-  border-bottom-left-radius: 5px;
-  border-bottom-right-radius: 5px;
-  h4 {
-    font-size: 24px;
-    font-weight: 800;
-    margin-bottom: 10px;
-  }
-  div button {
-    border: none;
-    width: 40px;
-    height: 40px;
-    border-radius: 20px;
-    margin-right: 4px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-  div:first-child {
-    margin-bottom: 10px;
-    display: flex;
-    justify-content: flex-start;
-    button:last-child {
-      color: white;
-      background-color: rgba(20, 20, 20, 0.3);
-      border: 2px solid rgba(255, 255, 255, 0.5);
-    }
-  }
-  div:nth-child(3) {
-    margin-bottom: 15px;
-    font-size: 14px;
-    line-height: 1.1;
-  }
-  div:last-child {
-    font-size: 12px;
-    font-weight: 600;
-  }
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  object-fit: cover;
+  border-radius: 5px;
+  transition: transform 0.3s ease-in-out;
 `;
 
-const Box = styled(motion.div)<{ bgphoto: string }>`
-  background-color: white;
-  background-image: url(${(props) => props.bgphoto});
-  background-size: cover;
-  background-position: center center;
-  border-radius: 5px;
+const Box = styled(motion.div)`
+  position: relative;
   margin-right: 10px;
   height: 160px;
   width: 290px;
   font-size: 66px;
   cursor: pointer;
-  &:hover {
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
-  }
   &:hover,
   & ${Info}:hover {
     z-index: 2;
+  }
+  &:hover ${BoxImage} {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
   }
 `;
 
@@ -94,7 +59,7 @@ const Row = styled(motion.div)`
   ${Box}:first-child {
     transform-origin: center left;
   }
-  ${Box}:last-child {
+  ${Box}:not(:first-child):last-child {
     transform-origin: center right;
   }
 `;
@@ -152,7 +117,7 @@ const boxVariants: Variants = {
   },
   hover: (isLastSlider) => ({
     scale: 1.3,
-    y: !isLastSlider ? -100 : -200,
+    y: isLastSlider ? -150 : -50,
     transition: {
       delay: 0.5,
       duration: 0.3,
@@ -176,27 +141,34 @@ const infoVariants: Variants = {
 interface SliderProps {
   style?: object;
   title?: string;
+  isFirstSlider?: boolean;
+  isLastSlider?: boolean;
+  rowNum?: number;
+  nowPath?: string;
+
   data:
     | IGetMovieResult
     | IGetSeriesResult
     | IGetMovieSearchResult
     | IGetTvSearchResult;
-  datatype: "movie" | "series" | "search_movie" | "search_tv";
+  datatype:
+    | "movie"
+    | "series"
+    | "search_movie"
+    | "search_tv"
+    | "bookmarked_movie"
+    | "bookmarked_series";
   offset: number;
-  isFirstSlider?: boolean;
-  isLastSlider?: boolean;
-  rowNum?: number;
-  nowPath?: string;
 }
 function Slider({
   style,
   title,
-  data,
-  datatype,
-  offset,
   isFirstSlider = false,
   isLastSlider = false,
   rowNum = 0,
+  data,
+  datatype,
+  offset,
 }: SliderProps) {
   const [index, setIndex] = useState(0);
   const [leaving, setLeaving] = useState(false);
@@ -206,8 +178,8 @@ function Slider({
       if (leaving) return;
       toggleLeaving();
       setGoBack(false);
-      const totalMovies = data.results.length - 1;
-      const maxIndex = Math.floor(totalMovies / offset) - 1;
+      const totalMovies = data.results.length;
+      const maxIndex = Math.ceil(totalMovies / offset) - 1;
       setIndex((prev) => (prev === maxIndex ? 0 : prev + 1));
     }
   };
@@ -216,8 +188,8 @@ function Slider({
       if (leaving) return;
       toggleLeaving();
       setGoBack(true);
-      const totalMovies = data.results.length - 1;
-      const maxIndex = Math.floor(totalMovies / offset) - 1;
+      const totalMovies = data.results.length;
+      const maxIndex = Math.ceil(totalMovies / offset) - 1;
       setIndex((prev) => (prev === 0 ? maxIndex : prev - 1));
     }
   };
@@ -230,6 +202,10 @@ function Slider({
           return `${netflixBasePath}/movies/${contentId}`;
         case "series":
           return `${netflixBasePath}/series/${contentId}`;
+        case "bookmarked_movie":
+          return `${netflixBasePath}/bookmarked/movies/${contentId}`;
+        case "bookmarked_series":
+          return `${netflixBasePath}/bookmarked/series/${contentId}`;
         case "search_movie":
         case "search_tv":
           const searchParams = new URLSearchParams(window.location.search);
@@ -243,12 +219,15 @@ function Slider({
   };
 
   const genreIds = useRecoilValue(genreIdsAtom);
-  const getGenreNameById = (id: number): string | undefined => {
-    const genreList = datatype === "movie" ? genreIds.movie : genreIds.tv;
-    if (!genreList) return undefined;
-    return genreList.genres.find(
-      (genre: { id: number; name: string }) => genre.id === id
-    )?.name;
+  const getGenreNameById = (id: number): string => {
+    const genreList =
+      datatype === "movie" || "search_movie" ? genreIds.movie : genreIds.tv;
+    if (!genreList) return "";
+    return (
+      genreList.genres.find(
+        (genre: { id: number; name: string }) => genre.id === id
+      )?.name ?? ""
+    );
   };
   return (
     <Wrapper style={style}>
@@ -278,63 +257,28 @@ function Slider({
             .slice(offset * index, offset * (index + 1))
             .map((content) => (
               <Box
-                custom={isLastSlider}
-                variants={boxVariants}
+                custom={{ isLastSlider, itemCount: data?.results.length || 0 }}
                 layoutId={`${rowNum}-${content.id}`}
                 key={content.id}
-                whileHover="hover"
+                variants={boxVariants}
                 initial="normal"
+                whileHover="hover"
                 transition={{ type: "tween" }}
                 onClick={() => onBoxClicked(content.id)}
-                bgphoto={makeImagePath(content.backdrop_path, "w500")}
               >
-                <Info variants={infoVariants}>
-                  <div>
-                    <button>
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        role="img"
-                        viewBox="0 0 24 24"
-                        width="24"
-                        height="24"
-                        data-icon="PlayStandard"
-                        aria-hidden="true"
-                      >
-                        <path
-                          d="M5 2.69127C5 1.93067 5.81547 1.44851 6.48192 1.81506L23.4069 11.1238C24.0977 11.5037 24.0977 12.4963 23.4069 12.8762L6.48192 22.1849C5.81546 22.5515 5 22.0693 5 21.3087V2.69127Z"
-                          fill="currentColor"
-                        ></path>
-                      </svg>
-                    </button>
-                    <button>
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        role="img"
-                        viewBox="0 0 24 24"
-                        width="24"
-                        height="24"
-                        data-icon="PlusStandard"
-                        aria-hidden="true"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          clipRule="evenodd"
-                          d="M11 11V2H13V11H22V13H13V22H11V13H2V11H11Z"
-                          fill="currentColor"
-                        ></path>
-                      </svg>
-                    </button>
-                  </div>
-                  <h4>{"title" in content ? content.title : content.name}</h4>
-                  <div>{truncateText(content.overview, 9)}</div>
-                  <div>
-                    {content.genre_ids.map((id) => {
-                      return getGenreNameById(id) + " ";
-                    })}
-                  </div>
-                </Info>
+                <BoxImage
+                  src={makeImagePath(content.backdrop_path, "w500")}
+                  alt={"title" in content ? content.title : content.name}
+                  threshold={100}
+                  effect="opacity"
+                  placeholderSrc={makeImagePath(content.backdrop_path, "w300")}
+                />
+                <Info
+                  content={content}
+                  datatype={datatype}
+                  getGenreNameById={getGenreNameById}
+                  variants={infoVariants}
+                />
               </Box>
             ))}
         </Row>
